@@ -613,7 +613,15 @@ export default function BubbleShooter({ width = 480, height = 640 }) {
         </span>
       </div>
 
-      <div className="canvas-wrap">
+      <div
+        className="canvas-wrap"
+        style={{
+          // Local gradient backdrop
+          background: "linear-gradient(#6DD5FA, #FFFFFF)",
+          padding: 8,
+          borderRadius: 12,
+        }}
+      >
         <canvas
           ref={canvasRef}
           width={width}
@@ -621,7 +629,13 @@ export default function BubbleShooter({ width = 480, height = 640 }) {
           role="img"
           aria-label="Bubble Shooter canvas game"
           tabIndex={0}
-          style={{ display: "block", outline: "none" }}
+          style={{
+            display: "block",
+            outline: "none",
+            border: "3px solid #2B6CB0",
+            borderRadius: 10,
+            background: "#d7ecff",
+          }}
         />
       </div>
     </div>
