@@ -38,6 +38,7 @@ function RootFlow() {
   const tabs = [];
   if (featureFlags.enableSnake !== false) tabs.push("Snake");
   tabs.push("Racing");
+  // Ensure Bubble Shooter is included as the 4th game entry
   tabs.push("Bubble Shooter");
 
   const initialTab = tabs[0] || "Racing";

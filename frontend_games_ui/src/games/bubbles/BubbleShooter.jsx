@@ -9,10 +9,12 @@ import React, { useEffect, useRef, useState } from "react";
  * - Rows shift down periodically; game over when bubbles reach bottom
  * - Score tracked; game can be restarted
  *
- * Ocean Professional theme alignment:
- * - Background gradient similar to app theme
- * - Canvas wrapped with border radius and subtle border via app CSS
- * - Accent colors from theme for bubbles and UI controls
+ * Canvas requirements (per task):
+ * - Dimensions: 480x640
+ * - Local styling ONLY on this canvas:
+ *   - background #d7ecff
+ *   - 3px #2B6CB0 border
+ *   - 10px border radius
  *
  * Accessibility:
  * - Canvas is focusable and has an aria-label
@@ -221,10 +223,9 @@ export default function BubbleShooter({ width = 480, height = 640 }) {
       }
     }
 
-    // bottom bound => game over
+    // bottom bound => let it pass; rely on rows shift
     if (shot.y >= height - 4) {
       shooter.shot = null;
-      // Let it pass (no penalty), rely on rows shift for game pressure
     }
   }
 
