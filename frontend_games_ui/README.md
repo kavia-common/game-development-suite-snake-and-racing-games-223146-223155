@@ -8,10 +8,11 @@ A lightweight React front-end that showcases two canvas-based games with an Ocea
 - Navbar with brand, theme toggle (light/dark), and tabs for Snake and Racing
 - EnvBanner reading environment variables (safe parsing and non-prod display)
 - Snake game:
-  - Pure logic engine (grid, movement, growth, food, collisions, score)
-  - Canvas rendering with keyboard controls (Arrow/WASD, Space to pause)
+  - Pure logic engine (grid, movement, growth, food, collisions, score). Engine operates strictly in grid units (cols/rows) for correctness.
+  - Canvas rendering maps grid to pixels via configurable Cell Size presets (16/24/32); default is 32 for a larger, "fat" snake.
   - Start / Pause / Reset and adjustable speed
-  - Status bar with score and ticks
+  - Initial length presets with a larger default for faster endings (default 20)
+  - Status bar with score, ticks, and cell size indicator
 - Racing demo:
   - Timestep-based physics (acceleration, rotation, velocity, friction, bounds)
   - Simple track and lap detection across a finish line segment
@@ -70,7 +71,8 @@ Snake:
 - Space to pause/resume
 - Start, Pause, Reset buttons
 - Speed selector (Slow/Normal/Fast/Extreme)
-- Note: The default initial snake length has been increased to 12 segments so games start with a longer body and self-collisions happen sooner. You can tune this via the exported INITIAL_SNAKE_LENGTH constant in snakeEngine or by passing the initialLength prop to SnakeGame.
+- Cell Size selector (16/24/32). Renderer maps grid cells to pixels; press Reset to apply new preset.
+- Initial length presets. The default initial snake length is now 20 segments so the snake starts longer and collisions happen sooner. You can tune this via the exported INITIAL_SNAKE_LENGTH constant in snakeEngine or by passing the initialLength prop to SnakeGame.
 
 Racing:
 - Arrow Keys or WASD to steer and accelerate
