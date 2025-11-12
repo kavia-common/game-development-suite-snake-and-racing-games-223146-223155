@@ -109,10 +109,32 @@ export default function BuildingBlocks({ width = 400, height = 600 }) {
     };
   }
 
+  // PUBLIC_INTERFACE
   function dropBlock() {
+    /** 
+     * Drop the current moving block.
+     * New behavior:
+     * - On collision with the top of the stack, apply precision-based scoring:
+     *   - Compute horizontal offset from ideal center alignment with the block below.
+     *   - Convert alignment accuracy into a bonus (0..10).
+     * - Every 5 successfully placed blocks, grant a height bonus (+20).
+     * - If missed (falls past the bottom), trigger game over as before.
+     * 
+     * Notes:
+     * - This only sets the falling state. Scoring is applied at the moment of landing 
+     *   inside update(), when we can reference the actual collision target.
+     */
     if (!movingRef.current || movingRef.current.falling) return;
     movingRef.current.falling = true;
     movingRef.current.vy = 0;
+
+    // Attach precision scoring handler to be applied upon landing
+    // by stashing metadata on the moving block so update() can compute bonuses.
+    const mb = movingRef.current;
+    if (mb) {
+      // mark that this block should evaluate precision when it lands
+      mb._evaluatePrecisionOnLand = true;
+    }
   }
 
   function update(dt) {
@@ -151,9 +173,33 @@ export default function BuildingBlocks({ width = 400, height = 600 }) {
             falling: false,
             vy: 0,
           };
+
+          // Compute scoring before pushing, using precision and periodic height bonus
+          let base = 1; // base point for a successful placement
+          let precisionBonus = 0;
+          if (mb._evaluatePrecisionOnLand) {
+            // center alignment accuracy vs the block below
+            const mbCenter = mb.x + mb.w / 2;
+            const topCenter = top.x + top.w / 2;
+            const maxOffset = top.w / 2; // worst-case half-width
+            const offset = Math.abs(mbCenter - topCenter);
+            const accuracy = Math.max(0, 1 - offset / maxOffset); // 1.0 (perfect) -> 0.0 (edge)
+            precisionBonus = Math.round(accuracy * 10); // scale to 0..10
+          }
+
+          // Determine if a height bonus applies: every 5th placed block (excluding base)
+          // Current stack count excluding base is blocksRef.current.length - 1
+          const placedSoFar = blocksRef.current.length - 1; // number already placed on base
+          const willBeIndex = placedSoFar + 1; // index for this new block
+          const heightBonus = willBeIndex % 5 === 0 ? 20 : 0;
+
+          const totalGain = base + precisionBonus + heightBonus;
+
           blocksRef.current.push(snapped);
-          setScore((s) => s + 1);
-          // spawn new mover
+          setScore((s) => s + totalGain);
+
+          // Cleanup marker and spawn new mover
+          delete mb._evaluatePrecisionOnLand;
           createMovingBlock();
         } else if (mb.y + mb.h >= height) {
           // missed -> game over
