@@ -7,6 +7,7 @@ import EnvBanner from "./components/EnvBanner";
 import Navbar from "./components/Navbar";
 import SnakeGame from "./games/snake/SnakeGame";
 import CarEscapeGame from "./games/racing/CarEscapeGame";
+import BubbleShooter from "./games/bubbles/BubbleShooter";
 import Login from "./pages/Login";
 import GameSelection from "./pages/GameSelection";
 
@@ -37,6 +38,7 @@ function RootFlow() {
   const tabs = [];
   if (featureFlags.enableSnake !== false) tabs.push("Snake");
   tabs.push("Racing");
+  tabs.push("Bubble Shooter");
 
   const initialTab = tabs[0] || "Racing";
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -125,6 +127,17 @@ function RootFlow() {
             aria-labelledby="tab-Racing"
           >
             <CarEscapeGame width={400} height={600} />
+          </section>
+        )}
+        {activeTab === "Bubble Shooter" && (
+          <section
+            aria-label="Bubble Shooter game section"
+            className="game-section"
+            id="panel-Bubble Shooter"
+            role="tabpanel"
+            aria-labelledby="tab-Bubble Shooter"
+          >
+            <BubbleShooter width={480} height={640} />
           </section>
         )}
         {tabs.length === 0 && (

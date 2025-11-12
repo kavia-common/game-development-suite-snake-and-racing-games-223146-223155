@@ -6,7 +6,7 @@ import "../index.css";
  * GameSelection page greets the user and provides navigation buttons to games.
  * Props:
  * - username: string
- * - onSelectGame: (gameKey: 'Snake' | 'Racing') => void
+ * - onSelectGame: (gameKey: 'Snake' | 'Racing' | 'Bubble Shooter') => void
  * - onLogout: () => void
  */
 // PUBLIC_INTERFACE
@@ -43,6 +43,14 @@ export default function GameSelection({ username, onSelectGame, onLogout }) {
               style={{ padding: "18px 12px", justifySelf: "stretch" }}
             >
               🚗 Play Racing
+            </button>
+            <button
+              className="btn ghost"
+              onClick={() => onSelectGame("Bubble Shooter")}
+              aria-label="Play Bubble Shooter"
+              style={{ padding: "18px 12px", justifySelf: "stretch" }}
+            >
+              🎯 Play Bubble Shooter
             </button>
           </div>
         </div>
