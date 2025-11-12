@@ -10,6 +10,7 @@ import CarEscapeGame from "./games/racing/CarEscapeGame";
 import BubbleShooter from "./games/bubbles/BubbleShooter";
 import Login from "./pages/Login";
 import GameSelection from "./pages/GameSelection";
+import BuildingBlocks from "./games/blocks/BuildingBlocks";
 
 /**
  * RootApp composes the login -> selection -> game flow using simple internal state.
@@ -40,6 +41,8 @@ function RootFlow() {
   tabs.push("Racing");
   // Ensure Bubble Shooter is included as the 4th game entry
   tabs.push("Bubble Shooter");
+  // Add Building Blocks as a tab
+  tabs.push("Building Blocks");
 
   const initialTab = tabs[0] || "Racing";
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -139,6 +142,17 @@ function RootFlow() {
             aria-labelledby="tab-Bubble Shooter"
           >
             <BubbleShooter width={480} height={640} />
+          </section>
+        )}
+        {activeTab === "Building Blocks" && (
+          <section
+            aria-label="Building Blocks game section"
+            className="game-section"
+            id="panel-Building Blocks"
+            role="tabpanel"
+            aria-labelledby="tab-Building Blocks"
+          >
+            <BuildingBlocks width={400} height={600} />
           </section>
         )}
         {tabs.length === 0 && (
