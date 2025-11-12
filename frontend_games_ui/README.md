@@ -1,6 +1,6 @@
-# Ocean Games UI (Snake + Racing)
+# Ocean Games UI (Login + Game Selection + Snake + Racing)
 
-A lightweight React front-end that showcases two canvas-based games (Snake and a Car Escape Racing game) with an Ocean Professional theme, tab navigation, and an environment-aware banner — implemented without adding new dependencies.
+A lightweight React front-end that now includes a simple login (username only), a Game Selection hub, and two canvas-based games (Snake and a Car Escape Racing game) with an Ocean Professional theme — implemented without adding new dependencies.
 
 ## Features
 
