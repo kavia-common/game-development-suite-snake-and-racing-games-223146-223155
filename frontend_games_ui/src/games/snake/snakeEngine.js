@@ -27,7 +27,7 @@ const DIRS = {
  * Default initial snake length used when creating or resetting the engine.
  * Exported for tests and UI tuning.
  */
-export const INITIAL_SNAKE_LENGTH = 9; // default larger start (previously ~3)
+export const INITIAL_SNAKE_LENGTH = 12; // default larger start (raised to trigger quicker self-collisions)
 
 /**
  * Build an initial snake body placed at the grid center and aligned opposite

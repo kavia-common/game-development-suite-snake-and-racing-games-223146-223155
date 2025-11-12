@@ -17,6 +17,8 @@ export default function SnakeGame({ showStatusBar = true, initialLength = INITIA
   const engineRef = useRef(null);
   const [running, setRunning] = useState(false);
   const [speedMs, setSpeedMs] = useState(120); // tick every ms
+  // local state to allow UI to tweak initial length; defaults to prop value
+  const [uiInitialLen, setUiInitialLen] = useState(initialLength);
 
   const cellSize = 20;
   const cols = 24;
@@ -26,10 +28,10 @@ export default function SnakeGame({ showStatusBar = true, initialLength = INITIA
 
   // initialize engine
   useEffect(() => {
-    engineRef.current = createSnakeEngine({ cols, rows, initialLength });
+    engineRef.current = createSnakeEngine({ cols, rows, initialLength: uiInitialLen });
     // reset to ensure food present
     engineRef.current.reset();
-  }, [cols, rows, initialLength]);
+  }, [cols, rows, uiInitialLen]);
 
   // keyboard controls
   useEffect(() => {
@@ -171,6 +173,22 @@ export default function SnakeGame({ showStatusBar = true, initialLength = INITIA
           <option value={120}>Normal</option>
           <option value={70}>Fast</option>
           <option value={40}>Extreme</option>
+        </select>
+        <label htmlFor="snake-len" style={{ marginLeft: 8 }}>
+          Initial length:
+        </label>
+        <select
+          id="snake-len"
+          className="select"
+          value={uiInitialLen}
+          onChange={(e) => setUiInitialLen(Number(e.target.value))}
+          aria-label="Initial snake length"
+          title="Initial snake length presets; press Reset to apply"
+        >
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={12}>12 (default)</option>
+          <option value={15}>15</option>
         </select>
         <span style={{ color: "var(--muted)", marginLeft: 8 }}>
           Controls: Arrow Keys or WASD, Space to Pause
