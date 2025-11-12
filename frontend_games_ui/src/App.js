@@ -3,7 +3,7 @@ import './App.css';
 import './index.css';
 import EnvBanner from './components/EnvBanner';
 import Navbar from './components/Navbar';
-import SnakeGame from './games/snake';
+import SnakeGame from './games/snake/SnakeGame';
 import RacingGame from './games/racing/RacingGame';
 import { getEnv } from './utils/env';
 

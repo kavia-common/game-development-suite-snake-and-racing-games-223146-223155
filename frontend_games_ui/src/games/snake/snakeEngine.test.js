@@ -2,72 +2,32 @@
 
 /**
  * Minimal tests for snake engine logic to verify:
- * - Wrap-around occurs on all borders (no game over on wall crossing)
- * - Self-collision triggers game over
+ * - Self-collision triggers game over when new head overlaps old body segment
+ * - Wall collision triggers game over
  * - Food consumption increases score and grows snake
  */
 
-import { createSnakeEngine, INITIAL_SNAKE_LENGTH } from "./snakeEngine";
+import { createSnakeEngine } from "./snakeEngine";
 
 // Helper to force deterministic food placement
 function placeFoodAt(engine, x, y) {
   engine.state.food = { x, y };
 }
 
-test("wrap-around right edge: moving right from last column appears at column 0", () => {
-  const eng = createSnakeEngine({ cols: 4, rows: 4, initialLength: INITIAL_SNAKE_LENGTH });
+test("wall collision triggers game over", () => {
+  const eng = createSnakeEngine({ cols: 4, rows: 4 });
   eng.reset();
 
+  // Place head near right wall, moving right
   eng.state.snake = [{ x: 3, y: 2 }];
   eng.state.dir = { x: 1, y: 0 };
 
   eng.step();
-
-  expect(eng.state.gameOver).toBe(false);
-  expect(eng.state.snake[0]).toEqual({ x: 0, y: 2 });
-});
-
-test("wrap-around left edge: moving left from column 0 appears at last column", () => {
-  const eng = createSnakeEngine({ cols: 5, rows: 4, initialLength: INITIAL_SNAKE_LENGTH });
-  eng.reset();
-
-  eng.state.snake = [{ x: 0, y: 1 }];
-  eng.state.dir = { x: -1, y: 0 };
-
-  eng.step();
-
-  expect(eng.state.gameOver).toBe(false);
-  expect(eng.state.snake[0]).toEqual({ x: 4, y: 1 });
-});
-
-test("wrap-around bottom edge: moving down from last row appears at row 0", () => {
-  const eng = createSnakeEngine({ cols: 6, rows: 3, initialLength: INITIAL_SNAKE_LENGTH });
-  eng.reset();
-
-  eng.state.snake = [{ x: 2, y: 2 }];
-  eng.state.dir = { x: 0, y: 1 };
-
-  eng.step();
-
-  expect(eng.state.gameOver).toBe(false);
-  expect(eng.state.snake[0]).toEqual({ x: 2, y: 0 });
-});
-
-test("wrap-around top edge: moving up from row 0 appears at last row", () => {
-  const eng = createSnakeEngine({ cols: 6, rows: 4, initialLength: INITIAL_SNAKE_LENGTH });
-  eng.reset();
-
-  eng.state.snake = [{ x: 1, y: 0 }];
-  eng.state.dir = { x: 0, y: -1 };
-
-  eng.step();
-
-  expect(eng.state.gameOver).toBe(false);
-  expect(eng.state.snake[0]).toEqual({ x: 1, y: 3 });
+  expect(eng.state.gameOver).toBe(true);
 });
 
 test("food consumption grows snake and increments score", () => {
-  const eng = createSnakeEngine({ cols: 6, rows: 6, initialLength: INITIAL_SNAKE_LENGTH });
+  const eng = createSnakeEngine({ cols: 6, rows: 6 });
   eng.reset();
 
   // Head at (2,3), direction right; place food at next cell (3,3)
@@ -84,7 +44,7 @@ test("food consumption grows snake and increments score", () => {
 });
 
 test("self-collision with old body causes game over", () => {
-  const eng = createSnakeEngine({ cols: 10, rows: 10, initialLength: INITIAL_SNAKE_LENGTH });
+  const eng = createSnakeEngine({ cols: 10, rows: 10 });
   eng.reset();
 
   // Create a longer snake in a U shape:

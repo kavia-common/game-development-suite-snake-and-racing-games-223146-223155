@@ -1,226 +1,149 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createSnakeEngine } from "./snakeEngine";
 import StatusBar from "../../components/StatusBar";
-import { createSnakeEngine, INITIAL_SNAKE_LENGTH } from "./snakeEngine";
 
 /**
- * Canvas-based Snake game component.
- * - Renders a grid snake game using a pure engine that operates in grid units.
- * - Renderer translates grid cells to pixels based on the selected cellSize preset.
- * - Provides controls for Start, Pause, Reset, Speed, Cell Size, and Initial Length presets.
- *
- * Props:
- * - showStatusBar?: boolean = true
- *
- * PUBLIC_INTERFACE
+ * Canvas-based Snake game. Uses refs for animation state to avoid excessive re-renders.
+ * Controls: Arrow keys or WASD.
+ * Buttons: Start, Pause, Reset; Speed selection.
  */
+// PUBLIC_INTERFACE
 export default function SnakeGame({ showStatusBar = true }) {
-  // Grid size is fixed in grid cells; renderer maps to pixels using cellSize preset.
-  const COLS = 20;
-  const ROWS = 20;
+  const canvasRef = useRef(null);
+  const rafRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const loopAccumRef = useRef(0);
 
-  // Presets
-  const cellSizeOptions = [16, 24, 32];
-  const initialLengthOptions = [10, 15, 20, 25, 30];
-
-  const [cellSize, setCellSize] = useState(32); // larger default per requirements
-  const [initialLength, setInitialLength] = useState(INITIAL_SNAKE_LENGTH); // 20 by default
-  const [speed, setSpeed] = useState("normal"); // slow | normal | fast | extreme
+  const engineRef = useRef(null);
   const [running, setRunning] = useState(false);
+  const [speedMs, setSpeedMs] = useState(120); // tick every ms
 
-  // Debug toggle via env log level (non-invasive)
-  const isDebug = useMemo(() => {
-    const lvl = (process.env.REACT_APP_LOG_LEVEL || "").toLowerCase();
-    return lvl === "debug" || lvl === "trace" || lvl === "verbose";
+  const cellSize = 20;
+  const cols = 24;
+  const rows = 20;
+  const width = cols * cellSize;
+  const height = rows * cellSize;
+
+  // initialize engine
+  useEffect(() => {
+    engineRef.current = createSnakeEngine({ cols, rows });
+    // reset to ensure food present
+    engineRef.current.reset();
   }, []);
 
-  // Timing (ms per tick) based on speed
-  const tickMs = useMemo(() => {
-    switch (speed) {
-      case "slow":
-        return 180;
-      case "fast":
-        return 90;
-      case "extreme":
-        return 55;
-      default:
-        return 120;
-    }
-  }, [speed]);
-
-  // Canvas refs and loop
-  const canvasRef = useRef(null);
-  const intervalRef = useRef(null);
-  const engineRef = useRef(null);
-
-  // Initialize engine
-  const initEngine = useCallback(() => {
-    if (isDebug) console.log("[Snake] initEngine with length", initialLength);
-    engineRef.current = createSnakeEngine({
-      cols: COLS,
-      rows: ROWS,
-      initialLength,
-    });
-  }, [initialLength, isDebug]);
-
-  // Draw function maps grid to canvas pixels
-  const draw = useCallback(() => {
-    const eng = engineRef.current;
-    if (!eng) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const w = COLS * cellSize;
-    const h = ROWS * cellSize;
-
-    // background
-    ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#0b1220";
-    ctx.fillRect(0, 0, w, h);
-
-    // grid (light)
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= COLS; x += 1) {
-      ctx.beginPath();
-      ctx.moveTo(x * cellSize + 0.5, 0);
-      ctx.lineTo(x * cellSize + 0.5, h);
-      ctx.stroke();
-    }
-    for (let y = 0; y <= ROWS; y += 1) {
-      ctx.beginPath();
-      ctx.moveTo(0, y * cellSize + 0.5);
-      ctx.lineTo(w, y * cellSize + 0.5);
-      ctx.stroke();
-    }
-
-    // food
-    if (eng.state.food) {
-      const fx = eng.state.food.x * cellSize;
-      const fy = eng.state.food.y * cellSize;
-      ctx.fillStyle = "#F59E0B";
-      const pad = Math.max(2, Math.floor(cellSize * 0.15));
-      ctx.fillRect(fx + pad, fy + pad, cellSize - pad * 2, cellSize - pad * 2);
-    }
-
-    // snake
-    const segPad = Math.max(1, Math.floor(cellSize * 0.1));
-    eng.state.snake.forEach((seg, idx) => {
-      const sx = seg.x * cellSize;
-      const sy = seg.y * cellSize;
-      // head with accent
-      if (idx === 0) {
-        ctx.fillStyle = "#60A5FA";
-        ctx.fillRect(sx + segPad, sy + segPad, cellSize - segPad * 2, cellSize - segPad * 2);
-        ctx.fillStyle = "#2563EB";
-        ctx.fillRect(
-          sx + segPad,
-          sy + segPad,
-          cellSize - segPad * 2,
-          Math.max(3, Math.floor((cellSize - segPad * 2) / 3))
-        );
-      } else {
-        ctx.fillStyle = "#2563EB";
-        ctx.fillRect(sx + segPad, sy + segPad, cellSize - segPad * 2, cellSize - segPad * 2);
-      }
-    });
-  }, [cellSize]);
-
-  // Step and redraw
-  const step = useCallback(() => {
-    const eng = engineRef.current;
-    if (!eng) return;
-    const beforeTick = eng.state.ticks;
-    eng.step();
-    if (isDebug) console.log("[Snake] step -> tick", beforeTick + 1, "score", eng.state.score, "gameOver", eng.state.gameOver);
-    draw();
-    // If game ended during this tick, stop the loop automatically
-    if (eng.state.gameOver) {
-      if (isDebug) console.log("[Snake] game over detected, stopping loop");
-      setRunning(false);
-    }
-  }, [draw, isDebug]);
-
-  // Controls
-  const start = () => {
-    if (!engineRef.current) {
-      if (isDebug) console.log("[Snake] no engine present on start, initializing");
-      initEngine();
-      draw();
-    }
-    if (engineRef.current?.state.gameOver) {
-      // If last session ended, reset to allow start
-      if (isDebug) console.log("[Snake] start requested but gameOver=true, resetting");
-      engineRef.current.reset();
-      draw();
-    }
-    if (isDebug) console.log("[Snake] start -> running true");
-    setRunning(true);
-    // Focus canvas for keyboard inputs
-    try {
-      canvasRef.current?.focus();
-    } catch (_e) {
-      // ignore
-    }
-  };
-  const pause = () => {
-    if (isDebug) console.log("[Snake] pause -> running false");
-    setRunning(false);
-  };
-  const reset = () => {
-    if (isDebug) console.log("[Snake] reset");
-    engineRef.current?.reset();
-    setRunning(false);
-    draw();
-  };
-
-  // Input
+  // keyboard controls
   useEffect(() => {
     const onKey = (e) => {
       if (!engineRef.current) return;
-      if (e.key === " ") {
-        setRunning((r) => !r);
-        e.preventDefault();
-        if (isDebug) console.log("[Snake] space -> toggle running");
-        return;
-      }
       engineRef.current.changeDirection(e.key);
-      if (isDebug) console.log("[Snake] changeDirection", e.key);
+      if (e.key === " " || e.code === "Space") {
+        // space toggles pause
+        setRunning((r) => !r);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isDebug]);
+  }, []);
 
-  // Recreate engine when initialLength changes (Reset behavior expected)
-  useEffect(() => {
-    initEngine();
-    draw();
-  }, [initEngine, draw]);
+  const draw = useCallback((ctx, eng) => {
+    const { state } = eng;
+    // background
+    ctx.fillStyle = "#0b1220";
+    ctx.fillRect(0, 0, width, height);
 
-  // Manage game loop interval based on running and speed
-  useEffect(() => {
-    // clear any previous
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    // grid subtle
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    for (let x = 0; x <= width; x += cellSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
     }
-    if (running) {
-      if (isDebug) console.log("[Snake] interval start @", tickMs, "ms");
-      intervalRef.current = setInterval(step, tickMs);
-    } else if (isDebug) {
-      console.log("[Snake] interval stopped");
+    for (let y = 0; y <= height; y += cellSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
     }
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        if (isDebug) console.log("[Snake] interval cleanup");
+
+    // snake
+    state.snake.forEach((seg, idx) => {
+      const gx = seg.x * cellSize;
+      const gy = seg.y * cellSize;
+      ctx.fillStyle = idx === 0 ? "#F59E0B" : "#64B5F6";
+      ctx.fillRect(gx + 2, gy + 2, cellSize - 4, cellSize - 4);
+    });
+
+    // food
+    if (state.food) {
+      ctx.fillStyle = "#EF4444";
+      ctx.beginPath();
+      ctx.arc(
+        state.food.x * cellSize + cellSize / 2,
+        state.food.y * cellSize + cellSize / 2,
+        cellSize / 3,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // game over overlay
+    if (state.gameOver) {
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 28px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Game Over", width / 2, height / 2);
+      ctx.font = "bold 16px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.fillText("Press Reset to try again", width / 2, height / 2 + 28);
+    }
+  }, []);
+
+  const loop = useCallback(
+    (ts) => {
+      const eng = engineRef.current;
+      if (!eng) return;
+
+      const ctx = canvasRef.current?.getContext("2d");
+      if (!ctx) return;
+
+      const dt = ts - (lastTimeRef.current || ts);
+      lastTimeRef.current = ts;
+      loopAccumRef.current += dt;
+
+      if (running && loopAccumRef.current >= speedMs) {
+        loopAccumRef.current = 0;
+        eng.step();
+        if (eng.state.gameOver) {
+          setRunning(false);
+        }
       }
-    };
-  }, [running, tickMs, step, isDebug]);
 
-  // Resize canvas when cellSize changes
-  const canvasWidth = COLS * cellSize;
-  const canvasHeight = ROWS * cellSize;
+      draw(ctx, eng);
+      rafRef.current = requestAnimationFrame(loop);
+    },
+    [draw, running, speedMs]
+  );
+
+  useEffect(() => {
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [loop]);
+
+  const start = () => {
+    if (engineRef.current?.state.gameOver) {
+      engineRef.current.reset();
+    }
+    setRunning(true);
+    canvasRef.current?.focus();
+  };
+  const pause = () => setRunning(false);
+  const reset = () => {
+    engineRef.current?.reset();
+    setRunning(false);
+  };
 
   return (
     <div>
@@ -234,54 +157,21 @@ export default function SnakeGame({ showStatusBar = true }) {
         <button className="btn secondary" onClick={reset} aria-label="Reset snake game">
           ↺ Reset
         </button>
-
-        <label style={{ marginLeft: 10 }}>
-          <span style={{ marginRight: 6, color: "var(--text-secondary)" }}>Speed</span>
-          <select
-            className="select"
-            aria-label="Speed selector"
-            value={speed}
-            onChange={(e) => setSpeed(e.target.value)}
-          >
-            <option value="slow">Slow</option>
-            <option value="normal">Normal</option>
-            <option value="fast">Fast</option>
-            <option value="extreme">Extreme</option>
-          </select>
+        <label htmlFor="snake-speed" style={{ marginLeft: 8 }}>
+          Speed:
         </label>
-
-        <label style={{ marginLeft: 10 }}>
-          <span style={{ marginRight: 6, color: "var(--text-secondary)" }}>Cell Size</span>
-          <select
-            className="select"
-            aria-label="Cell size selector"
-            value={cellSize}
-            onChange={(e) => setCellSize(parseInt(e.target.value, 10))}
-          >
-            {cellSizeOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label style={{ marginLeft: 10 }}>
-          <span style={{ marginRight: 6, color: "var(--text-secondary)" }}>Initial Length</span>
-          <select
-            className="select"
-            aria-label="Initial length selector"
-            value={initialLength}
-            onChange={(e) => setInitialLength(parseInt(e.target.value, 10))}
-          >
-            {initialLengthOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-
+        <select
+          id="snake-speed"
+          className="select"
+          value={speedMs}
+          onChange={(e) => setSpeedMs(Number(e.target.value))}
+          aria-label="Snake speed"
+        >
+          <option value={200}>Slow</option>
+          <option value={120}>Normal</option>
+          <option value={70}>Fast</option>
+          <option value={40}>Extreme</option>
+        </select>
         <span style={{ color: "var(--muted)", marginLeft: 8 }}>
           Controls: Arrow Keys or WASD, Space to Pause
         </span>
@@ -290,12 +180,12 @@ export default function SnakeGame({ showStatusBar = true }) {
       <div className="canvas-wrap">
         <canvas
           ref={canvasRef}
-          width={canvasWidth}
-          height={canvasHeight}
+          width={width}
+          height={height}
           role="img"
           aria-label="Snake game canvas"
           tabIndex={0}
-          style={{ display: "block", outline: "none", background: "transparent" }}
+          style={{ display: "block", outline: "none" }}
         />
       </div>
 
@@ -304,7 +194,6 @@ export default function SnakeGame({ showStatusBar = true }) {
           items={[
             { label: "Score", value: engineRef.current.state.score },
             { label: "Ticks", value: engineRef.current.state.ticks },
-            { label: "Cell", value: `${cellSize}px` },
           ]}
         />
       )}
