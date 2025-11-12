@@ -27,6 +27,12 @@ export default function SnakeGame({ showStatusBar = true }) {
   const [speed, setSpeed] = useState("normal"); // slow | normal | fast | extreme
   const [running, setRunning] = useState(false);
 
+  // Debug toggle via env log level (non-invasive)
+  const isDebug = useMemo(() => {
+    const lvl = (process.env.REACT_APP_LOG_LEVEL || "").toLowerCase();
+    return lvl === "debug" || lvl === "trace" || lvl === "verbose";
+  }, []);
+
   // Timing (ms per tick) based on speed
   const tickMs = useMemo(() => {
     switch (speed) {
@@ -48,12 +54,13 @@ export default function SnakeGame({ showStatusBar = true }) {
 
   // Initialize engine
   const initEngine = useCallback(() => {
+    if (isDebug) console.log("[Snake] initEngine with length", initialLength);
     engineRef.current = createSnakeEngine({
       cols: COLS,
       rows: ROWS,
       initialLength,
     });
-  }, [initialLength]);
+  }, [initialLength, isDebug]);
 
   // Draw function maps grid to canvas pixels
   const draw = useCallback(() => {
@@ -122,17 +129,45 @@ export default function SnakeGame({ showStatusBar = true }) {
   const step = useCallback(() => {
     const eng = engineRef.current;
     if (!eng) return;
+    const beforeTick = eng.state.ticks;
     eng.step();
+    if (isDebug) console.log("[Snake] step -> tick", beforeTick + 1, "score", eng.state.score, "gameOver", eng.state.gameOver);
     draw();
-  }, [draw]);
+    // If game ended during this tick, stop the loop automatically
+    if (eng.state.gameOver) {
+      if (isDebug) console.log("[Snake] game over detected, stopping loop");
+      setRunning(false);
+    }
+  }, [draw, isDebug]);
 
   // Controls
   const start = () => {
-    if (engineRef.current?.state.gameOver) return;
+    if (!engineRef.current) {
+      if (isDebug) console.log("[Snake] no engine present on start, initializing");
+      initEngine();
+      draw();
+    }
+    if (engineRef.current?.state.gameOver) {
+      // If last session ended, reset to allow start
+      if (isDebug) console.log("[Snake] start requested but gameOver=true, resetting");
+      engineRef.current.reset();
+      draw();
+    }
+    if (isDebug) console.log("[Snake] start -> running true");
     setRunning(true);
+    // Focus canvas for keyboard inputs
+    try {
+      canvasRef.current?.focus();
+    } catch (_e) {
+      // ignore
+    }
   };
-  const pause = () => setRunning(false);
+  const pause = () => {
+    if (isDebug) console.log("[Snake] pause -> running false");
+    setRunning(false);
+  };
   const reset = () => {
+    if (isDebug) console.log("[Snake] reset");
     engineRef.current?.reset();
     setRunning(false);
     draw();
@@ -145,13 +180,15 @@ export default function SnakeGame({ showStatusBar = true }) {
       if (e.key === " ") {
         setRunning((r) => !r);
         e.preventDefault();
+        if (isDebug) console.log("[Snake] space -> toggle running");
         return;
       }
       engineRef.current.changeDirection(e.key);
+      if (isDebug) console.log("[Snake] changeDirection", e.key);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [isDebug]);
 
   // Recreate engine when initialLength changes (Reset behavior expected)
   useEffect(() => {
@@ -161,20 +198,25 @@ export default function SnakeGame({ showStatusBar = true }) {
 
   // Manage game loop interval based on running and speed
   useEffect(() => {
+    // clear any previous
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
     if (running) {
+      if (isDebug) console.log("[Snake] interval start @", tickMs, "ms");
       intervalRef.current = setInterval(step, tickMs);
+    } else if (isDebug) {
+      console.log("[Snake] interval stopped");
     }
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
+        if (isDebug) console.log("[Snake] interval cleanup");
       }
     };
-  }, [running, tickMs, step]);
+  }, [running, tickMs, step, isDebug]);
 
   // Resize canvas when cellSize changes
   const canvasWidth = COLS * cellSize;
