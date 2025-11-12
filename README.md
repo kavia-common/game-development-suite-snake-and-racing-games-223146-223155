@@ -1,3 +1,3 @@
 # game-development-suite-snake-and-racing-games-223146-223155
 
-Note: The frontend UI currently includes the Snake game only. Racing has been removed as requested.
+Note: The frontend UI now includes both the Snake game and the Racing (Car Escape) game, accessible via tabs in the navbar.

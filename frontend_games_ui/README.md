@@ -1,17 +1,22 @@
-# Ocean Games UI (Snake Only)
+# Ocean Games UI (Snake + Racing)
 
-A lightweight React front-end that showcases a canvas-based Snake game with an Ocean Professional theme, simple tab navigation (Snake only), and an environment-aware banner — implemented without adding new dependencies.
+A lightweight React front-end that showcases two canvas-based games (Snake and a Car Escape Racing game) with an Ocean Professional theme, tab navigation, and an environment-aware banner — implemented without adding new dependencies.
 
 ## Features
 
 - Ocean Professional theme using CSS variables and smooth transitions
-- Navbar with brand, theme toggle (light/dark), and a single Snake tab
+- Navbar with brand, theme toggle (light/dark), and tabs for Snake and Racing
 - EnvBanner reading environment variables (safe parsing and non-prod display)
 - Snake game:
   - Pure logic engine (grid, movement, growth, food, collisions, score)
   - Canvas rendering with keyboard controls (Arrow/WASD, Space to pause)
   - Start / Pause / Reset and adjustable speed
   - Status bar with score and ticks
+- Racing (Car Escape) game:
+  - Canvas-based avoidance gameplay
+  - Left/Right arrow keys to steer; R to restart
+  - Start / Pause / Restart controls
+  - Score increases over time
 - Feature flags to enable/disable Snake and the status bar
 - Accessibility: ARIA labels, focus management, focus-visible outlines
 - No additional NPM dependencies beyond React scripts
@@ -64,6 +69,11 @@ Snake:
 - Start, Pause, Reset buttons
 - Speed selector (Slow/Normal/Fast/Extreme)
 
+Racing (Car Escape):
+- Left/Right Arrow keys to steer
+- R to restart after crash
+- Start, Pause, Restart buttons
+
 ## Accessibility
 
 - ARIA roles and labels for nav, game, and status
@@ -85,6 +95,8 @@ src/
     - snakeEngine.js
     - SnakeGame.jsx
     - index.js
+  - racing/
+    - CarEscapeGame.jsx
 
 ## Security & Configuration Notes
 
