@@ -1,24 +1,18 @@
-# Ocean Games UI (Snake + Racing)
+# Ocean Games UI (Snake Only)
 
-A lightweight React front-end that showcases two canvas-based games with an Ocean Professional theme, tabs navigation, and environment-aware banner — implemented without adding new dependencies.
+A lightweight React front-end that showcases a canvas-based Snake game with an Ocean Professional theme, simple tab navigation (Snake only), and an environment-aware banner — implemented without adding new dependencies.
 
 ## Features
 
 - Ocean Professional theme using CSS variables and smooth transitions
-- Navbar with brand, theme toggle (light/dark), and tabs for Snake and Racing
+- Navbar with brand, theme toggle (light/dark), and a single Snake tab
 - EnvBanner reading environment variables (safe parsing and non-prod display)
 - Snake game:
   - Pure logic engine (grid, movement, growth, food, collisions, score)
   - Canvas rendering with keyboard controls (Arrow/WASD, Space to pause)
   - Start / Pause / Reset and adjustable speed
   - Status bar with score and ticks
-- Racing demo:
-  - Powered by CarRacerCanvas.jsx (canvas-based racer component)
-  - Timestep-based physics (acceleration, rotation, velocity, friction, bounds)
-  - Simple track and lap detection across a finish line segment
-  - Canvas rendering and keyboard controls (Arrow/WASD, R to restart)
-  - Status bar with laps and elapsed time
-- Feature flags to enable/disable games and status bar
+- Feature flags to enable/disable Snake and the status bar
 - Accessibility: ARIA labels, focus management, focus-visible outlines
 - No additional NPM dependencies beyond React scripts
 
@@ -51,11 +45,10 @@ Example:
 REACT_APP_NODE_ENV=development
 REACT_APP_LOG_LEVEL=debug
 REACT_APP_EXPERIMENTS_ENABLED=true
-REACT_APP_FEATURE_FLAGS='{"enableSnake":true,"enableRacing":true,"showStatusBar":true}'
+REACT_APP_FEATURE_FLAGS='{"enableSnake":true,"showStatusBar":true}'
 
 Feature Flags:
 - enableSnake: boolean (default true)
-- enableRacing: boolean (default true)
 - showStatusBar: boolean (default true)
 
 Flags are parsed safely; malformed JSON will be handled gracefully and not crash the app.
@@ -64,7 +57,6 @@ Flags are parsed safely; malformed JSON will be handled gracefully and not crash
 
 Global:
 - Theme toggle button (light/dark)
-- Tabs to switch between Snake and Racing (Snake is default)
 
 Snake:
 - Arrow Keys or WASD to move
@@ -72,23 +64,11 @@ Snake:
 - Start, Pause, Reset buttons
 - Speed selector (Slow/Normal/Fast/Extreme)
 
-Racing:
-- Uses CarRacerCanvas (canvas-based racer)
-- Arrow Keys or WASD to steer and accelerate
-- R to restart
-- Start/Reset button available in UI
-
 ## Accessibility
 
-- ARIA roles and labels for nav, games, and status
+- ARIA roles and labels for nav, game, and status
 - Focus management (canvas elements focusable)
 - :focus-visible outline with high-contrast color
-
-## Limitations
-
-- The Racing track is a simplified shape; collision is only with outer bounds.
-- Lap detection uses a single horizontal finish line; cutting the track is possible (demo purpose).
-- Physics tuned for demo feel, not realism.
 
 ## Project Structure
 
@@ -104,9 +84,7 @@ src/
   - snake/
     - snakeEngine.js
     - SnakeGame.jsx
-  - racing/
-    - racingEngine.js
-    - RacingGame.jsx
+    - index.js
 
 ## Security & Configuration Notes
 

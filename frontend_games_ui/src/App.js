@@ -4,15 +4,14 @@ import './index.css';
 import EnvBanner from './components/EnvBanner';
 import Navbar from './components/Navbar';
 import SnakeGame from './games/snake/SnakeGame';
-import CarRacerCanvas from './games/racing/CarRacerCanvas.jsx';
 import { getEnv } from './utils/env';
 
 /**
- * Root application with Ocean Professional theme, navbar, tabs, and games.
- * - Tabs: Snake (default) and Racing
+ * Root application with Ocean Professional theme, navbar, and Snake game only.
+ * - Single tab: Snake
  * - Theme toggle: light/dark; persisted to localStorage
  * - Env banner shows non-production details
- * - Feature flags control visibility of games
+ * - Feature flags: enableSnake/showStatusBar respected; Racing removed
  */
 // PUBLIC_INTERFACE
 function App() {
@@ -23,13 +22,12 @@ function App() {
 
   const env = useMemo(() => getEnv(), []);
   const featureFlags = env.featureFlags || {};
-  const enabledTabs = [
-    featureFlags.enableSnake !== false ? 'Snake' : null,
-    featureFlags.enableRacing !== false ? 'Racing' : null,
-  ].filter(Boolean);
+
+  // Only Snake is available now
+  const enabledTabs = featureFlags.enableSnake === false ? [] : ['Snake'];
 
   const [activeTab, setActiveTab] = useState(() => {
-    // default Snake, else first enabled
+    // default to Snake if enabled
     if (featureFlags.enableSnake !== false) return 'Snake';
     return enabledTabs[0] || 'Snake';
   });
@@ -66,11 +64,6 @@ function App() {
         {activeTab === 'Snake' && featureFlags.enableSnake !== false && (
           <section aria-label="Snake game section" className="game-section">
             <SnakeGame showStatusBar={featureFlags.showStatusBar !== false} />
-          </section>
-        )}
-        {activeTab === 'Racing' && featureFlags.enableRacing !== false && (
-          <section aria-label="Racing game section" className="game-section">
-            <CarRacerCanvas showStatusBar={featureFlags.showStatusBar !== false} />
           </section>
         )}
         {enabledTabs.length === 0 && (
