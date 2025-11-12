@@ -13,9 +13,10 @@ A lightweight React front-end that showcases two canvas-based games with an Ocea
   - Start / Pause / Reset and adjustable speed
   - Status bar with score and ticks
 - Racing demo:
+  - Powered by CarRacerCanvas.jsx (canvas-based racer component)
   - Timestep-based physics (acceleration, rotation, velocity, friction, bounds)
   - Simple track and lap detection across a finish line segment
-  - Canvas rendering and keyboard controls (Arrow/WASD, Space to pause)
+  - Canvas rendering and keyboard controls (Arrow/WASD, R to restart)
   - Status bar with laps and elapsed time
 - Feature flags to enable/disable games and status bar
 - Accessibility: ARIA labels, focus management, focus-visible outlines
@@ -72,9 +73,10 @@ Snake:
 - Speed selector (Slow/Normal/Fast/Extreme)
 
 Racing:
+- Uses CarRacerCanvas (canvas-based racer)
 - Arrow Keys or WASD to steer and accelerate
-- Space to pause/resume
-- Start, Pause, Reset buttons
+- R to restart
+- Start/Reset button available in UI
 
 ## Accessibility
 

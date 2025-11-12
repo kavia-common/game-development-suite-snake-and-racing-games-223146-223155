@@ -4,7 +4,7 @@ import './index.css';
 import EnvBanner from './components/EnvBanner';
 import Navbar from './components/Navbar';
 import SnakeGame from './games/snake/SnakeGame';
-import RacingGame from './games/racing/RacingGame';
+import CarRacerCanvas from './games/racing/CarRacerCanvas';
 import { getEnv } from './utils/env';
 
 /**
@@ -70,7 +70,7 @@ function App() {
         )}
         {activeTab === 'Racing' && featureFlags.enableRacing !== false && (
           <section aria-label="Racing game section" className="game-section">
-            <RacingGame showStatusBar={featureFlags.showStatusBar !== false} />
+            <CarRacerCanvas showStatusBar={featureFlags.showStatusBar !== false} />
           </section>
         )}
         {enabledTabs.length === 0 && (
