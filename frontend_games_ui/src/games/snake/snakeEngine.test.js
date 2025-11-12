@@ -2,8 +2,8 @@
 
 /**
  * Minimal tests for snake engine logic to verify:
- * - Self-collision triggers game over when new head overlaps old body segment
- * - Wall collision triggers game over
+ * - Wrap-around occurs on all borders (no game over on wall crossing)
+ * - Self-collision triggers game over
  * - Food consumption increases score and grows snake
  */
 
@@ -14,16 +14,56 @@ function placeFoodAt(engine, x, y) {
   engine.state.food = { x, y };
 }
 
-test("wall collision triggers game over", () => {
+test("wrap-around right edge: moving right from last column appears at column 0", () => {
   const eng = createSnakeEngine({ cols: 4, rows: 4 });
   eng.reset();
 
-  // Place head near right wall, moving right
   eng.state.snake = [{ x: 3, y: 2 }];
   eng.state.dir = { x: 1, y: 0 };
 
   eng.step();
-  expect(eng.state.gameOver).toBe(true);
+
+  expect(eng.state.gameOver).toBe(false);
+  expect(eng.state.snake[0]).toEqual({ x: 0, y: 2 });
+});
+
+test("wrap-around left edge: moving left from column 0 appears at last column", () => {
+  const eng = createSnakeEngine({ cols: 5, rows: 4 });
+  eng.reset();
+
+  eng.state.snake = [{ x: 0, y: 1 }];
+  eng.state.dir = { x: -1, y: 0 };
+
+  eng.step();
+
+  expect(eng.state.gameOver).toBe(false);
+  expect(eng.state.snake[0]).toEqual({ x: 4, y: 1 });
+});
+
+test("wrap-around bottom edge: moving down from last row appears at row 0", () => {
+  const eng = createSnakeEngine({ cols: 6, rows: 3 });
+  eng.reset();
+
+  eng.state.snake = [{ x: 2, y: 2 }];
+  eng.state.dir = { x: 0, y: 1 };
+
+  eng.step();
+
+  expect(eng.state.gameOver).toBe(false);
+  expect(eng.state.snake[0]).toEqual({ x: 2, y: 0 });
+});
+
+test("wrap-around top edge: moving up from row 0 appears at last row", () => {
+  const eng = createSnakeEngine({ cols: 6, rows: 4 });
+  eng.reset();
+
+  eng.state.snake = [{ x: 1, y: 0 }];
+  eng.state.dir = { x: 0, y: -1 };
+
+  eng.step();
+
+  expect(eng.state.gameOver).toBe(false);
+  expect(eng.state.snake[0]).toEqual({ x: 1, y: 3 });
 });
 
 test("food consumption grows snake and increments score", () => {

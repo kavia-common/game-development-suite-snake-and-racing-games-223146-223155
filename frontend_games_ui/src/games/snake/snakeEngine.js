@@ -97,20 +97,20 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
   function step() {
     if (state.gameOver) return state;
 
+    // Apply pending direction if available (disallow instant reversal handled in changeDirection)
     if (state.pendingDir) {
       state.dir = state.pendingDir;
       state.pendingDir = null;
     }
 
     const head = state.snake[0];
-    const nx = head.x + state.dir.x;
-    const ny = head.y + state.dir.y;
 
-    // bounds collision (wall)
-    if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) {
-      state.gameOver = true;
-      return state;
-    }
+    // Compute next position and wrap around edges (toroidal grid)
+    // Using ((value % size) + size) % size to safely handle potential negatives
+    let nx = head.x + state.dir.x;
+    let ny = head.y + state.dir.y;
+    nx = ((nx % cols) + cols) % cols;
+    ny = ((ny % rows) + rows) % rows;
 
     // self collision:
     // Compare against the previous snake body (all segments except current head).
