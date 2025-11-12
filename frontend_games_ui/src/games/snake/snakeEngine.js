@@ -3,6 +3,11 @@
 /**
  * Pure snake engine: maintains grid, snake positions, food placement,
  * movement, growth, collision detection, and score.
+ *
+ * Self-collision rule:
+ * - Compute the next head position (nx, ny)
+ * - Compare it against the previous snake segments BEFORE moving the tail
+ *   (this ensures the check is done against the "old" body)
  */
 
 const DIRS = {
@@ -35,12 +40,15 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
   const midY = Math.floor(rows / 2);
   state.snake = [{ x: midX, y: midY }];
 
-  // PUBLIC_INTERFACE
+  /**
+   * PUBLIC_INTERFACE
+   * Change snake direction based on key input.
+   * Prevents reversing into itself by disallowing 180-degree turns.
+   */
   function changeDirection(key) {
     const k = String(key);
     const v = DIRS[k] || DIRS[k.toLowerCase()];
     if (!v) return;
-    // Prevent reversing into itself
     const next = v;
     if (state.dir.x + next.x === 0 && state.dir.y + next.y === 0) {
       return;
@@ -48,20 +56,25 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
     state.pendingDir = next;
   }
 
-  // PUBLIC_INTERFACE
+  /**
+   * PUBLIC_INTERFACE
+   * Place food at a random empty cell (not overlapping any snake segment).
+   */
   function placeFood() {
-    // place at random empty cell
     let x, y, tries = 0;
     do {
       x = Math.floor(Math.random() * cols);
       y = Math.floor(Math.random() * rows);
       tries += 1;
       if (tries > 1000) break;
-    } while (state.snake.some(s => s.x === x && s.y === y));
+    } while (state.snake.some((seg) => seg.x === x && seg.y === y));
     state.food = { x, y };
   }
 
-  // PUBLIC_INTERFACE
+  /**
+   * PUBLIC_INTERFACE
+   * Reset the game to the initial state and place new food.
+   */
   function reset() {
     state.snake = [{ x: midX, y: midY }];
     state.dir = { x: 1, y: 0 };
@@ -73,7 +86,14 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
     placeFood();
   }
 
-  // PUBLIC_INTERFACE
+  /**
+   * PUBLIC_INTERFACE
+   * Advance one tick:
+   * - Apply pending direction
+   * - Compute next head coordinates
+   * - Check wall and self-collisions using previous body state
+   * - Grow on food, otherwise move tail
+   */
   function step() {
     if (state.gameOver) return state;
 
@@ -86,22 +106,27 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
     const nx = head.x + state.dir.x;
     const ny = head.y + state.dir.y;
 
-    // bounds collision
+    // bounds collision (wall)
     if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) {
       state.gameOver = true;
       return state;
     }
 
-    // self collision
-    if (state.snake.some((s, i) => i !== 0 && s.x === nx && s.y === ny)) {
-      state.gameOver = true;
-      return state;
+    // self collision:
+    // Compare against the previous snake body (all segments except current head).
+    // This uses the "old" body since we haven't moved tail yet.
+    for (let i = 1; i < state.snake.length; i += 1) {
+      const seg = state.snake[i];
+      if (seg.x === nx && seg.y === ny) {
+        state.gameOver = true;
+        return state;
+      }
     }
 
     const newHead = { x: nx, y: ny };
     state.snake.unshift(newHead);
 
-    // food
+    // food handling (growth)
     if (state.food && state.food.x === nx && state.food.y === ny) {
       state.score += 1;
       placeFood();
