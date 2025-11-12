@@ -1,82 +1,116 @@
-# Lightweight React Template for KAVIA
+# Ocean Games UI (Snake + Racing)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A lightweight React front-end that showcases two canvas-based games with an Ocean Professional theme, tabs navigation, and environment-aware banner — implemented without adding new dependencies.
 
 ## Features
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+- Ocean Professional theme using CSS variables and smooth transitions
+- Navbar with brand, theme toggle (light/dark), and tabs for Snake and Racing
+- EnvBanner reading environment variables (safe parsing and non-prod display)
+- Snake game:
+  - Pure logic engine (grid, movement, growth, food, collisions, score)
+  - Canvas rendering with keyboard controls (Arrow/WASD, Space to pause)
+  - Start / Pause / Reset and adjustable speed
+  - Status bar with score and ticks
+- Racing demo:
+  - Timestep-based physics (acceleration, rotation, velocity, friction, bounds)
+  - Simple track and lap detection across a finish line segment
+  - Canvas rendering and keyboard controls (Arrow/WASD, Space to pause)
+  - Status bar with laps and elapsed time
+- Feature flags to enable/disable games and status bar
+- Accessibility: ARIA labels, focus management, focus-visible outlines
+- No additional NPM dependencies beyond React scripts
 
 ## Getting Started
 
-In the project directory, you can run:
+1. Install dependencies
+   npm install
 
-### `npm start`
+2. Run development server
+   npm start
+The app runs at http://localhost:3000.
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+3. Build for production
+   npm run build
 
-### `npm test`
+## Environment Variables
 
-Launches the test runner in interactive watch mode.
+Use a `.env` file at the project root (see .env.example for a template). For Create React App, env vars must be prefixed with REACT_APP_.
 
-### `npm run build`
+Available variables:
+- REACT_APP_NODE_ENV: logical environment (development, staging, production)
+- REACT_APP_LOG_LEVEL: info, debug, warn, error (free-form; used for banner only)
+- REACT_APP_FEATURE_FLAGS: JSON string with feature flags
+- REACT_APP_EXPERIMENTS_ENABLED: "true" to enable experiments (banner only)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Other container-level variables available but unused in code:
+REACT_APP_API_BASE, REACT_APP_BACKEND_URL, REACT_APP_FRONTEND_URL, REACT_APP_WS_URL, REACT_APP_NEXT_TELEMETRY_DISABLED, REACT_APP_ENABLE_SOURCE_MAPS, REACT_APP_PORT, REACT_APP_TRUST_PROXY, REACT_APP_HEALTHCHECK_PATH
 
-## Customization
+Example:
+REACT_APP_NODE_ENV=development
+REACT_APP_LOG_LEVEL=debug
+REACT_APP_EXPERIMENTS_ENABLED=true
+REACT_APP_FEATURE_FLAGS='{"enableSnake":true,"enableRacing":true,"showStatusBar":true}'
 
-### Colors
+Feature Flags:
+- enableSnake: boolean (default true)
+- enableRacing: boolean (default true)
+- showStatusBar: boolean (default true)
 
-The main brand colors are defined as CSS variables in `src/App.css`:
+Flags are parsed safely; malformed JSON will be handled gracefully and not crash the app.
 
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
+## Controls
 
-### Components
+Global:
+- Theme toggle button (light/dark)
+- Tabs to switch between Snake and Racing (Snake is default)
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+Snake:
+- Arrow Keys or WASD to move
+- Space to pause/resume
+- Start, Pause, Reset buttons
+- Speed selector (Slow/Normal/Fast/Extreme)
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+Racing:
+- Arrow Keys or WASD to steer and accelerate
+- Space to pause/resume
+- Start, Pause, Reset buttons
 
-## Learn More
+## Accessibility
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- ARIA roles and labels for nav, games, and status
+- Focus management (canvas elements focusable)
+- :focus-visible outline with high-contrast color
 
-### Code Splitting
+## Limitations
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- The Racing track is a simplified shape; collision is only with outer bounds.
+- Lap detection uses a single horizontal finish line; cutting the track is possible (demo purpose).
+- Physics tuned for demo feel, not realism.
 
-### Analyzing the Bundle Size
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+src/
+- App.js, App.css, index.css
+- components/
+  - EnvBanner.jsx
+  - Navbar.jsx
+  - StatusBar.jsx
+- utils/
+  - env.js
+- games/
+  - snake/
+    - snakeEngine.js
+    - SnakeGame.jsx
+  - racing/
+    - racingEngine.js
+    - RacingGame.jsx
 
-### Making a Progressive Web App
+## Security & Configuration Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- Do not hardcode secrets. Use environment variables.
+- The EnvBanner hides itself in production (REACT_APP_NODE_ENV=production).
 
-### Advanced Configuration
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+MIT (for demo purposes)
