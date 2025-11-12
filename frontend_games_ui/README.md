@@ -70,6 +70,7 @@ Snake:
 - Space to pause/resume
 - Start, Pause, Reset buttons
 - Speed selector (Slow/Normal/Fast/Extreme)
+- Note: The default initial snake length has been increased (about 9 segments) so games start with a longer body and self-collisions happen sooner. You can tune this via the exported INITIAL_SNAKE_LENGTH constant in snakeEngine or the SnakeGame initialLength prop.
 
 Racing:
 - Arrow Keys or WASD to steer and accelerate

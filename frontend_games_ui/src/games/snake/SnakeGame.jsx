@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { createSnakeEngine } from "./snakeEngine";
+import { createSnakeEngine, INITIAL_SNAKE_LENGTH } from "./snakeEngine";
 import StatusBar from "../../components/StatusBar";
 
 /**
@@ -8,7 +8,7 @@ import StatusBar from "../../components/StatusBar";
  * Buttons: Start, Pause, Reset; Speed selection.
  */
 // PUBLIC_INTERFACE
-export default function SnakeGame({ showStatusBar = true }) {
+export default function SnakeGame({ showStatusBar = true, initialLength = INITIAL_SNAKE_LENGTH }) {
   const canvasRef = useRef(null);
   const rafRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -26,10 +26,10 @@ export default function SnakeGame({ showStatusBar = true }) {
 
   // initialize engine
   useEffect(() => {
-    engineRef.current = createSnakeEngine({ cols, rows });
+    engineRef.current = createSnakeEngine({ cols, rows, initialLength });
     // reset to ensure food present
     engineRef.current.reset();
-  }, []);
+  }, [cols, rows, initialLength]);
 
   // keyboard controls
   useEffect(() => {

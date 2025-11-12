@@ -10,6 +10,7 @@
  *   (this ensures the check is done against the "old" body)
  */
 
+// Exposed directions mapping for inputs
 const DIRS = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
@@ -21,13 +22,49 @@ const DIRS = {
   d: { x: 1, y: 0 },
 };
 
+/**
+ * PUBLIC_INTERFACE
+ * Default initial snake length used when creating or resetting the engine.
+ * Exported for tests and UI tuning.
+ */
+export const INITIAL_SNAKE_LENGTH = 9; // default larger start (previously ~3)
+
+/**
+ * Build an initial snake body placed at the grid center and aligned opposite
+ * to the starting direction so segments are contiguous and do not collide.
+ * Head at index 0, extending backwards.
+ */
+function buildInitialSnake(cols, rows, startDir, length) {
+  const midX = Math.floor(cols / 2);
+  const midY = Math.floor(rows / 2);
+
+  // Opposite vector so body trails behind head along starting direction
+  const back = { x: -startDir.x, y: -startDir.y };
+
+  const snake = [];
+  for (let i = 0; i < length; i += 1) {
+    const x = midX + back.x * i;
+    const y = midY + back.y * i;
+    // Wrap in case center +/- length exceeds bounds
+    const wx = ((x % cols) + cols) % cols;
+    const wy = ((y % rows) + rows) % rows;
+    snake.push({ x: wx, y: wy });
+  }
+  return snake;
+}
+
 // PUBLIC_INTERFACE
-export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
+export function createSnakeEngine({
+  cols = 20,
+  rows = 20,
+  initialLength = INITIAL_SNAKE_LENGTH,
+  startDir = { x: 1, y: 0 },
+} = {}) {
   const state = {
     cols,
     rows,
     snake: [], // array of {x,y}, head at index 0
-    dir: { x: 1, y: 0 },
+    dir: { ...startDir },
     pendingDir: null,
     food: null,
     score: 0,
@@ -35,10 +72,8 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
     gameOver: false,
   };
 
-  // Initialize snake in the middle
-  const midX = Math.floor(cols / 2);
-  const midY = Math.floor(rows / 2);
-  state.snake = [{ x: midX, y: midY }];
+  // Seed initial snake aligned with starting direction
+  state.snake = buildInitialSnake(cols, rows, state.dir, Math.max(1, Math.floor(initialLength)));
 
   /**
    * PUBLIC_INTERFACE
@@ -51,7 +86,7 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
     if (!v) return;
     const next = v;
     if (state.dir.x + next.x === 0 && state.dir.y + next.y === 0) {
-      return;
+      return; // disallow immediate reversal
     }
     state.pendingDir = next;
   }
@@ -66,7 +101,7 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
       x = Math.floor(Math.random() * cols);
       y = Math.floor(Math.random() * rows);
       tries += 1;
-      if (tries > 1000) break;
+      if (tries > 2000) break;
     } while (state.snake.some((seg) => seg.x === x && seg.y === y));
     state.food = { x, y };
   }
@@ -76,8 +111,8 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
    * Reset the game to the initial state and place new food.
    */
   function reset() {
-    state.snake = [{ x: midX, y: midY }];
-    state.dir = { x: 1, y: 0 };
+    state.snake = buildInitialSnake(cols, rows, startDir, Math.max(1, Math.floor(initialLength)));
+    state.dir = { ...startDir };
     state.pendingDir = null;
     state.food = null;
     state.score = 0;
@@ -99,22 +134,23 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
 
     // Apply pending direction if available (disallow instant reversal handled in changeDirection)
     if (state.pendingDir) {
-      state.dir = state.pendingDir;
+      // Extra guard: don't allow 180-degree reversal
+      const nd = state.pendingDir;
+      if (!(state.dir.x + nd.x === 0 && state.dir.y + nd.y === 0)) {
+        state.dir = nd;
+      }
       state.pendingDir = null;
     }
 
     const head = state.snake[0];
 
     // Compute next position and wrap around edges (toroidal grid)
-    // Using ((value % size) + size) % size to safely handle potential negatives
     let nx = head.x + state.dir.x;
     let ny = head.y + state.dir.y;
     nx = ((nx % cols) + cols) % cols;
     ny = ((ny % rows) + rows) % rows;
 
-    // self collision:
-    // Compare against the previous snake body (all segments except current head).
-    // This uses the "old" body since we haven't moved tail yet.
+    // self collision check against old body (excluding current head)
     for (let i = 1; i < state.snake.length; i += 1) {
       const seg = state.snake[i];
       if (seg.x === nx && seg.y === ny) {
@@ -123,6 +159,7 @@ export function createSnakeEngine({ cols = 20, rows = 20 } = {}) {
       }
     }
 
+    // move head
     const newHead = { x: nx, y: ny };
     state.snake.unshift(newHead);
 
