@@ -4,7 +4,7 @@ import './index.css';
 import EnvBanner from './components/EnvBanner';
 import Navbar from './components/Navbar';
 import SnakeGame from './games/snake/SnakeGame';
-import CarRacerCanvas from './games/racing/CarRacerCanvas';
+import CarRacerCanvas from './games/racing/CarRacerCanvas.jsx';
 import { getEnv } from './utils/env';
 
 /**
